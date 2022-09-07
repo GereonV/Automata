@@ -10,7 +10,15 @@
 
 namespace fa {
 
-    inline constexpr auto map = [](std::map<char, std::size_t> const & alphabet) { return [&](char c) { return alphabet.at(c); }; };
+    inline constexpr auto map = [](std::map<auto, std::size_t> const & alphabet) { return std::views::transform([&](char c) { return alphabet.at(c); }); };
+
+    template<typename T>
+    std::map<T, std::size_t> alphabet(auto && symbols) noexcept {
+        std::map<T, std::size_t> alpha;
+        for(std::size_t i{}; auto && s : symbols)
+            alpha.emplace(s, i++);
+        return alpha;
+    }
 
     template<typename T>
     struct it_pair {
