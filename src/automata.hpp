@@ -117,13 +117,14 @@ namespace fa {
                 break;
         }
         std::vector<std::pair<std::set<std::size_t>, bool>> states;
+        auto it_of = [&](auto i) { return std::ranges::find_if(states, [=](auto && s) { return s.first.contains(i); }); };
         std::ranges::copy(std::views::iota(std::size_t{}, num_states) | std::views::transform([&](auto n) { return std::pair{std::set{n}, old.accepting_states.contains(n)}; }), std::back_inserter(states));
         for(std::size_t i{}; i < num_states; ++i) {
             for(auto j = i + 1; j < num_states; ++j) {
                 if(distinct[pos(i, j)])
                     continue;
-                auto is_set = std::ranges::find_if(states, [&](auto && s) { return s.contains(i); }, &std::pair<std::set<std::size_t>, bool>::first);
-                auto js_set = std::ranges::find_if(states, [&](auto && s) { return s.contains(j); }, &std::pair<std::set<std::size_t>, bool>::first);
+                auto is_set = it_of(i);
+                auto js_set = it_of(j);
                 if(is_set == js_set)
                     continue;
                 is_set->first.merge(js_set->first);
@@ -138,10 +139,10 @@ namespace fa {
             auto pos = i++ * alphabet_size;
             auto old_pos = *state.first.begin() * alphabet_size;
             for(auto c = alphabet_size; c--;)
-                dfa.delta[pos + c] = std::ranges::find_if(states, [succ = old.delta[old_pos + c]](auto && s) { return s.contains(succ); }, &std::pair<std::set<std::size_t>, bool>::first) - states.begin();
+                dfa.delta[pos + c] = it_of(old.delta[old_pos + c]) - states.begin();
         }
         for(auto acc : old.accepting_states)
-            dfa.accepting_states.emplace(std::ranges::find_if(states, [&](auto && s) { return s.contains(acc); }, &std::pair<std::set<std::size_t>, bool>::first) - states.begin());
+            dfa.accepting_states.emplace(it_of(acc) - states.begin());
         return dfa;
     }
 
